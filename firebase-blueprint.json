@@ -1,0 +1,54 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "github": { "type": "string" },
+        "portfolio": { "type": "string" },
+        "linkedin": { "type": "string" },
+        "leetcode": { "type": "string" },
+        "hackerrank": { "type": "string" },
+        "education": { "type": "array" },
+        "projects": { "type": "array" },
+        "experience": { "type": "array" },
+        "certificates": { "type": "array" },
+        "isProfileComplete": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "lastLogin": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "displayName", "isProfileComplete"]
+    },
+    "ResumeHistory": {
+      "title": "ResumeHistory",
+      "description": "Historical resume analysis and optimization results",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "jobDescription": { "type": "string" },
+        "originalResume": { "type": "string" },
+        "analysis": { "type": "object" },
+        "resumeLength": { "type": "string" }
+      },
+      "required": ["userId", "timestamp", "analysis"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile documents"
+    },
+    "/users/{userId}/history/{historyId}": {
+      "schema": "ResumeHistory",
+      "description": "User's resume analysis history"
+    }
+  }
+}

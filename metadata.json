@@ -1,0 +1,5 @@
+{
+  "name": "CareerSync AI",
+  "description": "CareerSync AI - The world's most advanced AI resume optimizer. Built for high-performers who want to bypass the noise and get hired.",
+  "requestFramePermissions": ["microphone"]
+}

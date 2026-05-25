@@ -407,7 +407,7 @@ export async function extractTextFromImage(file: File): Promise<string> {
   const prompt = "Extract all text from this resume image. Maintain the structure as much as possible. Return only the extracted text.";
   
   const response: GenerateContentResponse = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-3.5-flash",
     contents: {
       parts: [
         { text: prompt },
@@ -554,21 +554,45 @@ export async function analyzeAndOptimizeResume(
     });
   }
 
-  const response: GenerateContentResponse = await ai.models.generateContent({
-    model: "gemini-3.1-pro-preview",
-    contents: { parts },
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: analysisSchema,
-    },
-  });
+  let response: GenerateContentResponse;
+  try {
+    response = await ai.models.generateContent({
+      model: "gemini-3.1-pro-preview",
+      contents: { parts },
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: analysisSchema,
+      },
+    });
+  } catch (error) {
+    console.warn("Falling back to gemini-3.5-flash due to error with gemini-3.1-pro-preview:", error);
+    response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: { parts },
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: analysisSchema,
+      },
+    });
+  }
 
   const text = response.text;
   if (!text) {
     throw new Error("Failed to generate analysis");
   }
 
-  return JSON.parse(text);
+  let cleanText = text.trim();
+  if (cleanText.startsWith('```')) {
+    cleanText = cleanText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+  }
+  cleanText = cleanText.trim();
+
+  try {
+    return JSON.parse(cleanText);
+  } catch (parseError) {
+    console.error("Failed to parse clean text as JSON:", cleanText);
+    throw new Error("Received malformed response format from AI. Please try again.");
+  }
 }
 
 export async function generateJDSuggestions(jd: string | FilePart): Promise<string[]> {
@@ -587,7 +611,7 @@ export async function generateJDSuggestions(jd: string | FilePart): Promise<stri
 
   try {
     const response: GenerateContentResponse = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3.5-flash",
       contents: { parts },
       config: {
         responseMimeType: "application/json",
@@ -596,7 +620,12 @@ export async function generateJDSuggestions(jd: string | FilePart): Promise<stri
 
     const text = response.text;
     if (!text) return [];
-    return JSON.parse(text);
+    let cleanText = text.trim();
+    if (cleanText.startsWith('```')) {
+      cleanText = cleanText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+    }
+    cleanText = cleanText.trim();
+    return JSON.parse(cleanText);
   } catch (err) {
     console.error("Error generating suggestions:", err);
     return [
